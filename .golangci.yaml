@@ -26,3 +26,5 @@ linters:
     - nlreturn
     # Doesn't seem to work very well at present
     - structcheck
+    # Don't care about parallel tests
+    - paralleltest
