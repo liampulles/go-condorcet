@@ -68,7 +68,7 @@ D
 	expectedErr := "ERROR [Line 11]: could not read record: could not add equal elements: cyclic vote detected: cannot reference a candidate twice in a vote\n"
 
 	// Exercise SUT
-	Run(input, &output, &errOutput)
+	run(input, &output, &errOutput)
 
 	// Verify results
 	assert.Equal(t, expectedOutput, output.String())

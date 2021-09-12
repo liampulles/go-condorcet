@@ -1,0 +1,7 @@
+C,A,B,E,D
+A,C=B,E,D
+B,E,D,A,C
+C,B,A=D,E
+C,A,B
+B,E=D,A,C
+A,C,B,E

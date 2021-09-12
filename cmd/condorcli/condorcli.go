@@ -9,11 +9,10 @@ import (
 )
 
 func main() {
-	Run(os.Stdin, os.Stdout, os.Stderr)
+	run(os.Stdin, os.Stdout, os.Stderr)
 }
 
-// Run is the main entrypoint for condorcli. It is separated to be directly testable.
-func Run(input io.Reader, output, errOutput io.Writer) {
+func run(input io.Reader, output, errOutput io.Writer) {
 	votes, invalid := readVotes(input)
 	writeInvalid(invalid, errOutput)
 
@@ -22,9 +21,7 @@ func Run(input io.Reader, output, errOutput io.Writer) {
 }
 
 func readVotes(input io.Reader) ([]gocondorcet.Vote, []gocondorcet.InvalidVote) {
-	parseFn, _ := gocondorcet.BasicDiscovering()
-	vr := gocondorcet.NewVoteReader(input, parseFn)
-
+	vr := gocondorcet.NewVoteReader(input, gocondorcet.BasicParseFn)
 	return vr.ReadAll()
 }
 

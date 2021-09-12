@@ -235,29 +235,13 @@ func NewVoteReader(r io.Reader, parseFn CandidateIDParseFn) *VoteReader {
 	}
 }
 
-// BasicDiscovering provides a basic implementation of CandidateIDParseFn,
-// which also records discovered CandidateIDs to a list (when used).
+// BasicParseFn provides a basic implementation of CandidateIDParseFn.
 // The parser will trim whitespace and uppercase input.
-func BasicDiscovering() (CandidateIDParseFn, *[]CandidateID) {
-	var result []CandidateID
+func BasicParseFn(in string) (CandidateID, error) {
+	trimmed := strings.TrimSpace(in)
+	upper := strings.ToUpper(trimmed)
 
-	seen := make(map[CandidateID]int)
-	resultPtr := &result
-
-	return func(in string) (CandidateID, error) {
-		trimmed := strings.TrimSpace(in)
-		upper := strings.ToUpper(trimmed)
-		id := CandidateID(upper)
-		_, ok := seen[id]
-
-		if !ok {
-			appended := append(*resultPtr, id)
-			*resultPtr = appended
-			seen[id] = len(*resultPtr)
-		}
-
-		return id, nil
-	}, resultPtr
+	return CandidateID(upper), nil
 }
 
 // ReadAll reads all votes from the VoteReader (until the reader reaches EOF).

@@ -209,9 +209,8 @@ func TestVoteReader_GivenValidReader_ShouldParse(t *testing.T) {
 	}
 }
 
-func TestBasicDiscovering_ShouldAccumulateTrimmedUpperIDs(t *testing.T) {
+func TestBasicDiscovering_ShouldReturnTrimmedUpperIDs(t *testing.T) {
 	// Setup fixture
-	fn, accum := gocondorcet.BasicDiscovering()
 	fixtures := []string{
 		"bob",
 		"alice",
@@ -230,12 +229,6 @@ func TestBasicDiscovering_ShouldAccumulateTrimmedUpperIDs(t *testing.T) {
 		"SAM",
 		"DAVE",
 	}
-	expectedAccum := []gocondorcet.CandidateID{
-		"BOB",
-		"ALICE",
-		"DAVE",
-		"SAM",
-	}
 
 	// Exercise SUT
 	for i, fixture := range fixtures {
@@ -243,16 +236,13 @@ func TestBasicDiscovering_ShouldAccumulateTrimmedUpperIDs(t *testing.T) {
 
 		t.Run(fmt.Sprintf("\"%s\"", fixture), func(t *testing.T) {
 			// Exercise SUT
-			actual, err := fn(fixture)
+			actual, err := gocondorcet.BasicParseFn(fixture)
 
 			// Verify result
 			assert.NoError(t, err)
 			assert.Equal(t, expected, actual)
 		})
 	}
-
-	// Verify results
-	assert.Equal(t, expectedAccum, *accum)
 }
 
 func identParse(in string) (gocondorcet.CandidateID, error) {
