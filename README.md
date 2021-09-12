@@ -15,7 +15,7 @@
 
 <p align="center">
   <a href="https://github.com/liampulles/go-condorcet/releases">
-    <img src="https://img.shields.io/github/release/go-condorcet/go-condorcet.svg" alt="[GitHub release]"/>
+    <img src="https://img.shields.io/github/v/release/liampulles/go-condorcet" alt="[GitHub release]" >
   </a>
   <a href="https://app.travis-ci.com/liampulles/go-condorcet">
     <img src="https://app.travis-ci.com/liampulles/go-condorcet.svg?branch=main" alt="[Build Status]"/>
