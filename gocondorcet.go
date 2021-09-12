@@ -15,7 +15,7 @@ import (
 
 // Evaluate will perform a Schulze Condorcet election.
 func Evaluate(votes []Vote) Results {
-	ids := findCandidateIDSet(votes)
+	ids := findAllCandidateIDs(votes)
 	pairPrefs := findPairwisePreferences(votes, ids)
 	strongestPaths := findStrongestPathStrengths(pairPrefs, ids)
 	fmt.Println(strongestPaths)
@@ -118,7 +118,7 @@ func findVotePref(vote Vote, id CandidateID) uint {
 	return math.MaxUint
 }
 
-func findCandidateIDSet(votes []Vote) []CandidateID {
+func findAllCandidateIDs(votes []Vote) []CandidateID {
 	set := make(map[CandidateID]bool)
 
 	for _, vote := range votes {
