@@ -193,8 +193,6 @@ func max(a, b uint) uint {
 	return b
 }
 
-type idPairValueMap map[candidatePair]uint
-
 func newIDPairValueMap() idPairValueMap {
 	return idPairValueMap(make(map[candidatePair]uint))
 }
@@ -204,18 +202,14 @@ func (m idPairValueMap) Set(i, j CandidateID, value uint) {
 }
 
 func (m idPairValueMap) Get(i, j CandidateID) uint {
-	v, ok := m[candidatePair{i, j}]
-	if ok {
-		return v
-	}
-
-	return 0
+	return m[candidatePair{i, j}]
 }
 
 func (m idPairValueMap) Add(i, j CandidateID, value uint) {
-	current := m.Get(i, j)
-	m.Set(i, j, current+value)
+	m[candidatePair{i, j}] += value
 }
+
+type idPairValueMap map[candidatePair]uint
 
 type candidatePair struct {
 	A CandidateID
@@ -308,6 +302,16 @@ func (vr *VoteReader) Read() (*Vote, error) {
 	}
 
 	record := splitChar(vr.scanner.Text(), ',')
+
+	result, err := vr.readRecord(record)
+	if err != nil {
+		return nil, fmt.Errorf("could not read record: %w", err)
+	}
+
+	return asNillableVote(result), nil
+}
+
+func (vr *VoteReader) readRecord(record []string) (map[CandidateID]Preference, error) {
 	result := make(map[CandidateID]Preference)
 	pref := -1
 
@@ -320,28 +324,44 @@ func (vr *VoteReader) Read() (*Vote, error) {
 
 		pref++
 
-		for _, equalElem := range equals {
-			cID, err := vr.parseFn(equalElem)
-
-			if err != nil {
-				return nil, fmt.Errorf("could not parse candidate ID: %w", err)
-			}
-
-			if _, ok := result[cID]; ok {
-				return nil, ErrCyclicVote
-			}
-
-			result[cID] = Preference(pref)
+		if err := vr.addEqualElements(equals, result, Preference(pref)); err != nil {
+			return nil, fmt.Errorf("could not add equal elements: %w", err)
 		}
 	}
 
-	if len(result) == 0 {
-		return nil, nil
+	return result, nil
+}
+
+func (vr *VoteReader) addEqualElements(
+	equalElements []string,
+	into map[CandidateID]Preference,
+	preference Preference,
+) error {
+	for _, equalElem := range equalElements {
+		cID, err := vr.parseFn(equalElem)
+
+		if err != nil {
+			return fmt.Errorf("could not parse candidate ID: %w", err)
+		}
+
+		if _, ok := into[cID]; ok {
+			return ErrCyclicVote
+		}
+
+		into[cID] = preference
 	}
 
-	vote := Vote(result)
+	return nil
+}
 
-	return &vote, nil
+func asNillableVote(in map[CandidateID]Preference) *Vote {
+	if len(in) == 0 {
+		return nil
+	}
+
+	vote := Vote(in)
+
+	return &vote
 }
 
 func splitChar(elem string, split rune) []string {

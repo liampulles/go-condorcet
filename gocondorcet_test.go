@@ -184,8 +184,8 @@ func TestVoteReader_GivenValidReader_ShouldParse(t *testing.T) {
 		{
 			"sam=dave\nsam,sam\n\n\n\n\ntammy,,sue,bob=alice=dave\nbob,dan=jim",
 			[]gocondorcet.InvalidVote{
-				{1, "cyclic vote detected: cannot reference a candidate twice in a vote"},
-				{7, "could not parse candidate ID: no jims allowed"},
+				{1, "could not read record: could not add equal elements: cyclic vote detected: cannot reference a candidate twice in a vote"},
+				{7, "could not read record: could not add equal elements: could not parse candidate ID: no jims allowed"},
 			},
 			[]gocondorcet.Vote{
 				{"sam": 0, "dave": 0},
