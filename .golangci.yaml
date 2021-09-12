@@ -1,3 +1,7 @@
+run:
+  # Don't run on tests (tests have a low maintenance standard)
+  tests: false
+
 issues:
   include:
     # Comments

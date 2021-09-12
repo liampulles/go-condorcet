@@ -9,12 +9,217 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"strings"
 )
 
 // Evaluate will perform a Schulze Condorcet election.
 func Evaluate(votes []Vote) Results {
-	return nil
+	ids := findCandidateIDSet(votes)
+	pairPrefs := findPairwisePreferences(votes, ids)
+	strongestPaths := findStrongestPathStrengths(pairPrefs, ids)
+	fmt.Println(strongestPaths)
+	rank := findRank(strongestPaths, ids)
+
+	return Results(rank)
+}
+
+func findRank(strongestPaths idPairValueMap, ids []CandidateID) []CandidateID {
+	winnerMap := make(map[CandidateID]int)
+
+	for _, id := range ids {
+		winnerMap[id] = 0
+	}
+
+	iterateOverIDPairs(ids, func(idI, idJ CandidateID) {
+		if strongestPaths.Get(idI, idJ) > strongestPaths.Get(idJ, idI) {
+			winnerMap[idI]++
+		}
+	})
+
+	var result []CandidateID
+
+	for len(winnerMap) > 0 {
+		bestRank := -1
+
+		var bestID CandidateID
+
+		for id, rank := range winnerMap {
+			if rank > bestRank {
+				bestRank = rank
+				bestID = id
+			}
+		}
+
+		result = append(result, bestID)
+
+		delete(winnerMap, bestID)
+	}
+
+	return result
+}
+
+func findStrongestPathStrengths(pairPrefs idPairValueMap, ids []CandidateID) idPairValueMap {
+	result := newIDPairValueMap()
+
+	iterateOverIDPairs(ids, func(idI, idJ CandidateID) {
+		dIJ := pairPrefs.Get(idI, idJ)
+		if dIJ > pairPrefs.Get(idJ, idI) {
+			result.Set(idI, idJ, dIJ)
+		} else {
+			result.Set(idI, idJ, 0)
+		}
+	})
+
+	iterateOverIDTriples(ids, func(idI, idJ, idK CandidateID) {
+		result.Set(idJ, idK, max(
+			result.Get(idJ, idK),
+			min(
+				result.Get(idJ, idI),
+				result.Get(idI, idK),
+			),
+		))
+	})
+
+	return result
+}
+
+func findPairwisePreferences(votes []Vote, ids []CandidateID) idPairValueMap {
+	result := newIDPairValueMap()
+
+	for _, vote := range votes {
+		addPairwisePreferencesForVote(vote, ids, result)
+	}
+
+	return result
+}
+
+func addPairwisePreferencesForVote(
+	vote Vote,
+	ids []CandidateID,
+	result idPairValueMap,
+) {
+	iterateOverIDPairs(ids, func(idI, idJ CandidateID) {
+		prefI := findVotePref(vote, idI)
+		prefJ := findVotePref(vote, idJ)
+		// If I is preferred to J, that is its value is strictly lower.
+		if prefI < prefJ {
+			result.Add(idI, idJ, 1)
+		}
+	})
+}
+
+func findVotePref(vote Vote, id CandidateID) uint {
+	pref, ok := vote[id]
+	if ok {
+		return uint(pref)
+	}
+
+	return math.MaxUint
+}
+
+func findCandidateIDSet(votes []Vote) []CandidateID {
+	set := make(map[CandidateID]bool)
+
+	for _, vote := range votes {
+		for id := range vote {
+			set[id] = true
+		}
+	}
+
+	result := make([]CandidateID, len(set))
+	count := -1
+
+	for id := range set {
+		count++
+
+		result[count] = id
+	}
+
+	return result
+}
+
+func iterateOverIDPairs(ids []CandidateID, fn func(idI, idJ CandidateID)) {
+	for i := 0; i < len(ids); i++ {
+		idI := ids[i]
+
+		for j := 0; j < len(ids); j++ {
+			if i == j {
+				continue
+			}
+
+			idJ := ids[j]
+			fn(idI, idJ)
+		}
+	}
+}
+
+func iterateOverIDTriples(ids []CandidateID, fn func(idI, idJ, idK CandidateID)) {
+	for i := 0; i < len(ids); i++ {
+		idI := ids[i]
+
+		for j := 0; j < len(ids); j++ {
+			if i == j {
+				continue
+			}
+
+			idJ := ids[j]
+
+			for k := 0; k < len(ids); k++ {
+				if i == k || j == k {
+					continue
+				}
+
+				idK := ids[k]
+				fn(idI, idJ, idK)
+			}
+		}
+	}
+}
+
+func min(a, b uint) uint {
+	if a < b {
+		return a
+	}
+
+	return b
+}
+
+func max(a, b uint) uint {
+	if a > b {
+		return a
+	}
+
+	return b
+}
+
+type idPairValueMap map[candidatePair]uint
+
+func newIDPairValueMap() idPairValueMap {
+	return idPairValueMap(make(map[candidatePair]uint))
+}
+
+func (m idPairValueMap) Set(i, j CandidateID, value uint) {
+	m[candidatePair{i, j}] = value
+}
+
+func (m idPairValueMap) Get(i, j CandidateID) uint {
+	v, ok := m[candidatePair{i, j}]
+	if ok {
+		return v
+	}
+
+	return 0
+}
+
+func (m idPairValueMap) Add(i, j CandidateID, value uint) {
+	current := m.Get(i, j)
+	m.Set(i, j, current+value)
+}
+
+type candidatePair struct {
+	A CandidateID
+	B CandidateID
 }
 
 // --- Utility methods ---
