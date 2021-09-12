@@ -15,10 +15,10 @@ import (
 
 // Evaluate will perform a Schulze Condorcet election.
 func Evaluate(votes []Vote) Results {
+	// This algorithm is based on the one described here: https://electowiki.org/wiki/Schulze_method
 	ids := findAllCandidateIDs(votes)
 	pairPrefs := findPairwisePreferences(votes, ids)
 	strongestPaths := findStrongestPathStrengths(pairPrefs, ids)
-	fmt.Println(strongestPaths)
 	rank := findRank(strongestPaths, ids)
 
 	return Results(rank)

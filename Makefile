@@ -20,7 +20,7 @@ update:
 pre-commit: update clean coverage.txt inspect
 	go mod tidy
 clean:
-	rm -f coverage.txt
+	rm -f coverage.txt $(GOBIN)/condorcli
 
 # Needed tools
 $(GOBIN)/golangci-lint:
